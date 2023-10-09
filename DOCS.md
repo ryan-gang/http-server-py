@@ -4,8 +4,14 @@ Task is to start a TCP server on port 4221.
 
 ## Stage 2 : Respond with 200
 
-- Accept a TCP connection
-- Read data from the connection (we'll get to parsing it in later stages)
+- Accept a TCP connection.
+- Read data from the connection.
 - Respond with `HTTP/1.1 200 OK\r\n\r\n` (there are two `\r\n`s at the end)
 
 Ref : https://docs.python.org/3/library/socket.html#example
+
+## Stage 3 : Respond with 404
+
+- Read data from the connection.
+- Parse request contents and headers.
+- Based on contents, return 200 / 404.

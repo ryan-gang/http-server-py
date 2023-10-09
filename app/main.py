@@ -1,5 +1,16 @@
 import socket
 
+CRLF = "\r\n"
+success_response = "HTTP/1.1 200 OK\r\n\r\n"
+failure_response = "HTTP/1.1 404 Not Found\r\n\r\n"
+
+
+def handle_request(path: str) -> str:
+    if path == "/":
+        return success_response
+    else:
+        return failure_response
+
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -9,9 +20,10 @@ def main():
     conn, addr = server_socket.accept()  # wait for client
     with conn:
         print("Connected by", addr)
-        _ = conn.recv(1024)
-        response = "HTTP/1.1 200 OK\r\n\r\n"
-        conn.send(response.encode())
+        data = conn.recv(1024)
+        first_line, *req_headers = data.decode().split(CRLF)
+        method, path, version = first_line.split(" ")
+        conn.send(handle_request(path).encode())
 
 
 if __name__ == "__main__":

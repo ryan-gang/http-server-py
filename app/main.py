@@ -10,6 +10,7 @@ def create_response(path: str) -> str:
     response = success_response
     response += f"Content-Type: text/plain{CRLF}"
     response += f"Content-Length: {len(secret)}{CRLF}"
+    response += f"{CRLF}"  # end-headers
     response += f"{secret}{CRLF}"
     return response
 

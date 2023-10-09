@@ -23,7 +23,7 @@ class RequestHandler:
             val = headers[key]
             str_repr = f"{key}: {val}"
             headers_str.append(str_repr)
-        return f"{CRLF}".join(headers_str)
+        return f"{CRLF}".join(headers_str) + CRLF
 
     def end_response_headers(self, response_headers: str) -> str:
         return response_headers + CRLF
@@ -66,7 +66,7 @@ def handle_request(path: str) -> str:
     if path == "/":
         return req_handler.create_success_response()
     elif path.startswith("/echo"):
-        body = path.split("/")[-1]
+        body = path.split("/echo/")[1]
         headers = {"Content-Type": "text/plain", "Content-Length": f"{len(body)}"}
         return req_handler.create_success_response(headers, body)
     else:
@@ -84,6 +84,7 @@ def main():
         data = conn.recv(1024)
         first_line, *req_headers = data.decode().split(CRLF)
         method, path, version = first_line.split(" ")
+        print(handle_request(path).encode())
         conn.send(handle_request(path).encode())
 
 

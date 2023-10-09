@@ -15,3 +15,9 @@ Ref : https://docs.python.org/3/library/socket.html#example
 - Read data from the connection.
 - Parse request contents and headers.
 - Based on contents, return 200 / 404.
+
+## Stage 4 : Respond with 404
+
+- Parse request content, return part of it in response.
+
+Ref : https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages

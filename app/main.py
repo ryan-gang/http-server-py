@@ -85,15 +85,21 @@ class RequestHandler:
         return self.method, self.path, self.version
 
 
-def handle_request(path: str) -> str:
+def handle_request(req_handler: RequestHandler) -> str:
     resp_handler = ResponseHandler()
+    _, path, _ = req_handler.get_status_line()
+    headers = req_handler.get_headers()
 
     if path == "/":
         return resp_handler.create_success_response()
     elif path.startswith("/echo"):
-        body = path.split("/echo/")[1]
-        headers = {"Content-Type": "text/plain", "Content-Length": f"{len(body)}"}
-        return resp_handler.create_success_response(headers, body)
+        query_param = path.split("/echo/")[1]
+        headers = {"Content-Type": "text/plain", "Content-Length": f"{len(query_param)}"}
+        return resp_handler.create_success_response(headers, query_param)
+    elif path == "/user-agent":
+        ua = headers["User-Agent"]
+        headers = {"Content-Type": "text/plain", "Content-Length": f"{len(ua)}"}
+        return resp_handler.create_success_response(headers, body=ua)
     else:
         return resp_handler.create_failure_response()
 
@@ -108,9 +114,9 @@ def main():
         print("Connected by", addr)
         request = conn.recv(2048)
         req_handler = RequestHandler(request)
-        _, path, _ = req_handler.get_status_line()
-        print(handle_request(path).encode())
-        conn.send(handle_request(path).encode())
+        resp = handle_request(req_handler).encode()
+        print(request, resp)
+        conn.send(resp)
 
 
 if __name__ == "__main__":

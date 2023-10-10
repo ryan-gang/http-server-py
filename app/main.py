@@ -111,10 +111,13 @@ def fetch_response(req_handler: RequestHandler, args: list[str]) -> str:
             file = path.split("/files/")[1]
             all_files = os.listdir(directory)
             if file in all_files:
-                file_path = os.path.join(directory, file)
-                headers = {"Content-Type": "application/octet-stream"}
+                file_path, file_contents = os.path.join(directory, file), ""
                 with open(file_path, "r") as f:
                     file_contents = f.read()
+                headers = {
+                    "Content-Type": "application/octet-stream",
+                    "Content-Length": f"{len(file_contents)}",
+                }
                 return resp_handler.create_success_response(headers, body=file_contents)
     return resp_handler.create_failure_response()
 

@@ -1,6 +1,8 @@
 import socket
 from typing import Optional
 import threading
+import sys
+import os
 
 CRLF = "\r\n"
 
@@ -88,7 +90,7 @@ class RequestHandler:
         return self.method, self.path, self.version
 
 
-def fetch_response(req_handler: RequestHandler) -> str:
+def fetch_response(req_handler: RequestHandler, args: list[str]) -> str:
     resp_handler = ResponseHandler()
     _, path, _ = req_handler.get_status_line()
     headers = req_handler.get_headers()
@@ -103,11 +105,20 @@ def fetch_response(req_handler: RequestHandler) -> str:
         ua = headers["User-Agent"]
         headers = {"Content-Type": "text/plain", "Content-Length": f"{len(ua)}"}
         return resp_handler.create_success_response(headers, body=ua)
-    else:
-        return resp_handler.create_failure_response()
+    elif len(args) > 1:
+        flag, directory = args[1], args[2]
+        if flag == "--directory":
+            file = path.split("/files/")[1]
+            all_files = os.listdir(directory)
+            if file in all_files:
+                headers = {"Content-Type": "application/octet-stream"}
+                with open(file, "r") as f:
+                    file_contents = f.read()
+                return resp_handler.create_success_response(headers, body=file_contents)
+    return resp_handler.create_failure_response()
 
 
-def handle_request(conn: socket.socket, addr: socket.AddressFamily):
+def handle_request(conn: socket.socket, addr: socket.AddressFamily, args: list[str]):
     size = 1024
     with conn:
         print("Connected by", addr)
@@ -116,7 +127,7 @@ def handle_request(conn: socket.socket, addr: socket.AddressFamily):
             if not request:
                 raise Exception("Client disconnected.")
             req_handler = RequestHandler(request)
-            response = fetch_response(req_handler).encode()
+            response = fetch_response(req_handler, args).encode()
             print(request, response)
             conn.send(response)
         except Exception:
@@ -124,12 +135,13 @@ def handle_request(conn: socket.socket, addr: socket.AddressFamily):
 
 
 def main():
+    args = sys.argv
     server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
     print("Started Server.")
     while True:
         conn, addr = server_socket.accept()
         conn.settimeout(30)
-        threading.Thread(target=handle_request, args=(conn, addr)).start()
+        threading.Thread(target=handle_request, args=(conn, addr, args)).start()
 
 
 if __name__ == "__main__":

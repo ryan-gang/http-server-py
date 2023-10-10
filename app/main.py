@@ -1,10 +1,12 @@
 import socket
 from typing import Optional
+import threading
 
 CRLF = "\r\n"
 
 
 class ResponseHandler:
+    # Stateless.
     http_ver = "HTTP/1.1"
     success_code = "200"
     success_text = "OK"
@@ -63,6 +65,7 @@ class ResponseHandler:
 
 
 class RequestHandler:
+    # Stateful.
     def __init__(self, request: bytes) -> None:
         self.parse_request(request)
 
@@ -85,7 +88,7 @@ class RequestHandler:
         return self.method, self.path, self.version
 
 
-def handle_request(req_handler: RequestHandler) -> str:
+def fetch_response(req_handler: RequestHandler) -> str:
     resp_handler = ResponseHandler()
     _, path, _ = req_handler.get_status_line()
     headers = req_handler.get_headers()
@@ -104,19 +107,29 @@ def handle_request(req_handler: RequestHandler) -> str:
         return resp_handler.create_failure_response()
 
 
-def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
-
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
-    conn, addr = server_socket.accept()  # wait for client
+def handle_request(conn: socket.socket, addr: socket.AddressFamily):
+    size = 1024
     with conn:
         print("Connected by", addr)
-        request = conn.recv(2048)
-        req_handler = RequestHandler(request)
-        resp = handle_request(req_handler).encode()
-        print(request, resp)
-        conn.send(resp)
+        try:
+            request = conn.recv(size)
+            if not request:
+                raise Exception("Client disconnected.")
+            req_handler = RequestHandler(request)
+            response = fetch_response(req_handler).encode()
+            print(request, response)
+            conn.send(response)
+        except Exception:
+            return
+
+
+def main():
+    server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
+    print("Started Server.")
+    while True:
+        conn, addr = server_socket.accept()
+        conn.settimeout(30)
+        threading.Thread(target=handle_request, args=(conn, addr)).start()
 
 
 if __name__ == "__main__":

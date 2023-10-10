@@ -9,7 +9,7 @@ class RequestHandler:
         req, self.body = request.decode().split(CRLF * 2)
         status_line, *headers_str = req.split(CRLF)
         self.method, self.path, self.version = status_line.split(" ")
-        self.headers = {}
+        self.headers: dict[str, str] = {}
         for string in headers_str:
             key, val = string.split(": ")
             self.headers[key] = val

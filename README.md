@@ -1,7 +1,7 @@
-[![progress-banner](https://backend.codecrafters.io/progress/http-server/a320b074-e882-4185-bb8b-9eef54a18e1a)](https://app.codecrafters.io/users/ghostxzxzgit?r=2qF)
+# README.md
 
-This is a starting point for Python solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+A multi-threaded toy http-server written in Python, capable of serving
+concurrent clients. Part of the Codecrafters series.
 
 [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
 protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
@@ -11,28 +11,52 @@ Along the way you'll learn about TCP servers,
 [HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
 and more.
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+# Docs.md
 
-# Passing the first stage
+## Stage 1 : Bind to a port
 
-The entry point for your HTTP server implementation is in `app/main.py`. Study
-and uncomment the relevant code, and push your changes to pass the first stage:
+Task is to start a TCP server on port 4221.
 
-```sh
-git add .
-git commit -m "pass 1st stage" # any msg
-git push origin master
-```
+## Stage 2 : Respond with 200
 
-Time to move on to the next stage!
+- Accept a TCP connection.
+- Read data from the connection.
+- Respond with `HTTP/1.1 200 OK\r\n\r\n` (there are two `\r\n`s at the end)
 
-# Stage 2 & beyond
+Ref : https://docs.python.org/3/library/socket.html#example
 
-Note: This section is for stages 2 and beyond.
+## Stage 3 : Respond with 404
 
-1. Ensure you have `python (3.11)` installed locally
-1. Run `./your_server.sh` to run your program, which is implemented in
-   `app/main.py`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+- Read data from the connection.
+- Parse request contents and headers.
+- Based on contents, return 200 / 404.
+
+## Stage 4 : Respond with content
+
+- Parse request content, return part of it in response.
+
+Ref : https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
+
+## Stage 5 : Parse Headers
+
+- Parse Headers, put into a `dict[str, str]`.
+
+## Stage 6 : Concurrent connections
+
+- Server needs to be able to handle multiple clients simultaneously. Easy way to
+  do that is to spin off new threads for every new request. But its not very
+  sustainable.  
+  Alternatives might be Thread pools, multiprocessing, event loop, async.  
+  Ref : https://stackoverflow.com/questions/23828264
+
+- For local testing, use `ncat` to hold a persistent conn, then use another
+  client like `httpie` or `curl`.  
+  Ref : https://nmap.org/ncat/
+
+## Stage 7 : Get File
+
+- Return file contents in the body of the response.
+
+## Stage 8 : Post File
+
+- Put request body into a file.

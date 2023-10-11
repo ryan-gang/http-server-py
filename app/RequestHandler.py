@@ -2,10 +2,16 @@ CRLF = "\r\n"
 
 
 class RequestHandler:
-    def __init__(self, request: bytes) -> None:
-        self.parse_request(request)
+    """
+    Parses the incoming request, gets the body, headers, method, path and version.
+    Stores the values in instance variables. Returns as required.
+    Stateful.
+    """
 
-    def parse_request(self, request: bytes) -> None:
+    def __init__(self, request: bytes) -> None:
+        self._parse_request(request)
+
+    def _parse_request(self, request: bytes) -> None:
         req, self.body = request.decode().split(CRLF * 2)
         status_line, *headers_str = req.split(CRLF)
         self.method, self.path, self.version = status_line.split(" ")

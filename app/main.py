@@ -12,6 +12,8 @@ class ResponseHandler:
     http_ver = "HTTP/1.1"
     success_code = "200"
     success_text = "OK"
+    created_code = "201"
+    created_text = "Created"
     failure_code = "404"
     failure_text = "Not Found"
 
@@ -55,6 +57,13 @@ class ResponseHandler:
             self.http_ver, self.success_code, self.success_text, headers, body
         )
 
+    def create_created_response(
+        self, headers: dict[str, str] = {}, body: Optional[str] = None
+    ) -> str:
+        return self.create_response(
+            self.http_ver, self.created_code, self.created_text, headers, body
+        )
+
     def create_failure_response(
         self, headers: dict[str, str] = {}, body: Optional[str] = None
     ) -> str:
@@ -92,8 +101,9 @@ class RequestHandler:
 
 def fetch_response(req_handler: RequestHandler, args: list[str]) -> str:
     resp_handler = ResponseHandler()
-    _, path, _ = req_handler.get_status_line()
+    method, path, _ = req_handler.get_status_line()
     headers = req_handler.get_headers()
+    body = req_handler.get_body()
 
     if path == "/":
         return resp_handler.create_success_response()
@@ -108,17 +118,26 @@ def fetch_response(req_handler: RequestHandler, args: list[str]) -> str:
     elif len(args) > 1:
         flag, directory = args[1], args[2]
         if flag == "--directory":
-            file = path.split("/files/")[1]
-            all_files = os.listdir(directory)
-            if file in all_files:
-                file_path, file_contents = os.path.join(directory, file), ""
-                with open(file_path, "r") as f:
-                    file_contents = f.read()
-                headers = {
-                    "Content-Type": "application/octet-stream",
-                    "Content-Length": f"{len(file_contents)}",
-                }
-                return resp_handler.create_success_response(headers, body=file_contents)
+            if method == "GET":
+                file = path.split("/files/")[1]
+                all_files = os.listdir(directory)
+                if file in all_files:
+                    file_path, file_contents = os.path.join(directory, file), ""
+                    with open(file_path, "r") as f:
+                        file_contents = f.read()
+                    headers = {
+                        "Content-Type": "application/octet-stream",
+                        "Content-Length": f"{len(file_contents)}",
+                    }
+                    return resp_handler.create_success_response(headers, body=file_contents)
+            elif method == "POST":
+                file_name = path.split("/files/")[1]
+                file_path = os.path.join(directory, file_name)
+                file_contents = body
+                with open(file_path, "w") as f:
+                    f.write(file_contents)
+                return resp_handler.create_created_response(body=file_contents)
+
     return resp_handler.create_failure_response()
 
 
